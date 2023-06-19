@@ -11,20 +11,64 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.13.5",
+    "@plasmohq/messaging": "^0.4.0",
+    "@plasmohq/storage": "^1.6.1",
     "plasmo": "0.76.1",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
+    "@plasmohq/prettier-plugin-sort-imports": "3.6.4",
     "@types/chrome": "0.0.237",
     "@types/node": "20.2.4",
     "@types/react": "18.2.7",
     "@types/react-dom": "18.2.4",
     "prettier": "2.8.8",
-    "typescript": "5.0.4",
-    "@plasmohq/prettier-plugin-sort-imports": "3.6.4"
+    "typescript": "5.0.4"
   },
   "manifest": {
+    "icons": {
+      "16": "../assets/icons/icon16.grayscale.png",
+      "32": "../assets/icons/icon32.grayscale.png",
+      "48": "../assets/icons/icon48.grayscale.png",
+      "64": "../assets/icons/icon64.grayscale.png",
+      "128": "../assets/icons/icon128.grayscale.png"
+    },
+    "action": {
+      "default_icon": {
+        "16": "../assets/icons/icon16.grayscale.png",
+        "32": "../assets/icons/icon32.grayscale.png",
+        "48": "../assets/icons/icon48.grayscale.png",
+        "64": "../assets/icons/icon64.grayscale.png",
+        "128": "../assets/icons/icon128.grayscale.png"
+      },
+      "default_popup": "popup.html"
+    },
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "assets/icons/icon16.grayscale.png",
+          "assets/icons/icon32.grayscale.png",
+          "assets/icons/icon48.grayscale.png",
+          "assets/icons/icon64.grayscale.png",
+          "assets/icons/icon128.grayscale.png",
+          "assets/icons/icon16.png",
+          "assets/icons/icon32.png",
+          "assets/icons/icon48.png",
+          "assets/icons/icon64.png",
+          "assets/icons/icon128.png"
+        ],
+        "matches": [
+          "https://*.zendesk.com/*"
+        ]
+      }
+    ],
+    "permissions": [
+      "declarativeContent"
+    ],
     "host_permissions": [
       "https://*/*"
     ]
