@@ -1,4 +1,10 @@
-import { Button, CircularProgress, Grid, Typography } from "@mui/material";
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  Grid,
+  Typography
+} from "@mui/material";
 
 import { sendToContentScript } from "@plasmohq/messaging";
 import { Storage } from "@plasmohq/storage";
@@ -29,12 +35,20 @@ function IndexPopup() {
             Customer Experience Assessment Tool
           </Typography>
         </Grid>
+        <Grid item xs={12}>
+          <Alert severity="info">
+            After you click on Start Data Collection button the application will
+            collect information about triggers, automations and macros and
+            export it as .xlsx file which can be uploaded to Google Drive or
+            Google Sheets to view it as a Spreadsheet.
+          </Alert>
+        </Grid>
         {isDataCollectionInProgress !== undefined && (
           <Grid item xs={12}>
             <Button
               variant="contained"
               fullWidth
-              disabled={isDataCollectionInProgress ? true : false}
+              disabled={isDataCollectionInProgress === true}
               onClick={onStartDataCollectionButtonClick}>
               {isDataCollectionInProgress ? (
                 <>

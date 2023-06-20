@@ -1,6 +1,6 @@
 {
   "name": "customer-experience-assessment-tool",
-  "displayName": "Customer experience assessment tool",
+  "displayName": "Customer Experience Assessment Tool",
   "version": "0.0.1",
   "description": "A browser extension for doing Zendesk customer experience assessments.",
   "author": "Gaurav Narkhede",
@@ -18,7 +18,8 @@
     "@plasmohq/storage": "^1.6.1",
     "plasmo": "0.76.1",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   },
   "devDependencies": {
     "@plasmohq/prettier-plugin-sort-imports": "3.6.4",

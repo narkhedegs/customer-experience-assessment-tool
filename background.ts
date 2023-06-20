@@ -1,18 +1,15 @@
-async function loadImageData(url: string) {
-  const image = await createImageBitmap(await (await fetch(url)).blob());
-  const { width, height } = image;
-  const canvas = new OffscreenCanvas(width, height);
-  const context = canvas.getContext("2d");
-  context.drawImage(image, 0, 0, width, height);
-  const imageData = context.getImageData(0, 0, width, height);
-  return imageData;
-}
+import { Storage } from "@plasmohq/storage";
 
 chrome.runtime.onInstalled.addListener(async () => {
+  const storage = new Storage({
+    area: "local"
+  });
+  await storage.set("isDataCollectionInProgress", false);
+
   await chrome.action.disable();
 
   chrome.declarativeContent.onPageChanged.removeRules(async () => {
-    const defaultRule = {
+    let defaultRule = {
       conditions: [
         new chrome.declarativeContent.PageStateMatcher({
           pageUrl: { hostSuffix: "zendesk.com" }
@@ -36,3 +33,13 @@ chrome.runtime.onInstalled.addListener(async () => {
     chrome.declarativeContent.onPageChanged.addRules(rules);
   });
 });
+
+async function loadImageData(url: string) {
+  const image = await createImageBitmap(await (await fetch(url)).blob());
+  const { width, height } = image;
+  const canvas = new OffscreenCanvas(width, height);
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0, width, height);
+  const imageData = context.getImageData(0, 0, width, height);
+  return imageData;
+}
