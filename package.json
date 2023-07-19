@@ -1,7 +1,7 @@
 {
   "name": "customer-experience-assessment-tool",
   "displayName": "Customer Experience Assessment Tool",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A browser extension for doing Zendesk customer experience assessments.",
   "author": "Gaurav Narkhede",
   "packageManager": "npm@9.6.4",
