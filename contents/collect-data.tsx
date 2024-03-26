@@ -1,8 +1,10 @@
+import jsonata from "jsonata";
 import type { PlasmoCSConfig } from "plasmo";
 import XLSX from "xlsx";
 
 import { useMessage } from "@plasmohq/messaging/hook";
 import { Storage } from "@plasmohq/storage";
+import { useStorage } from "@plasmohq/storage/hook";
 
 import { ApiError } from "~types/ApiError";
 import type { CollectDataRequest } from "~types/CollectDataRequest";
@@ -13,60 +15,12 @@ export const config: PlasmoCSConfig = {
   matches: ["https://*.zendesk.com/*"]
 };
 
-const getApisToCall = [
-  {
-    url: "/api/v2/triggers/active?include=usage_30d&page[size]=100",
-    collectionPropertyName: "triggers"
-  },
-  {
-    url: "/api/v2/trigger_categories?page[size]=100",
-    collectionPropertyName: "trigger_categories"
-  },
-  {
-    url: "/api/v2/automations/active?include=usage_30d&page[size]=100",
-    collectionPropertyName: "automations"
-  },
-  {
-    url: "/api/v2/macros/active?include=usage_30d&page[size]=100",
-    collectionPropertyName: "macros"
-  },
-  {
-    url: "/api/v2/views?active=true&page[size]=100",
-    collectionPropertyName: "views"
-  },
-  {
-    url: "/api/v2/custom_statuses",
-    collectionPropertyName: "custom_statuses"
-  },
-  {
-    url: "/api/v2/target_failures",
-    collectionPropertyName: "target_failures"
-  },
-  {
-    url: "/api/v2/users?role[]=admin&role[]=agent&page[size]=100",
-    collectionPropertyName: "users",
-    sheetName: "agents"
-  },
-  {
-    url: "/api/v2/groups?page[size]=100",
-    collectionPropertyName: "groups"
-  },
-  {
-    url: "/api/v2/group_memberships?page[size]=100",
-    collectionPropertyName: "group_memberships"
-  },
-  {
-    url: "/api/v2/guide/content_tags?page[size]=30",
-    collectionPropertyName: "records",
-    sheetName: "content_tags"
-  },
-  {
-    url: "/api/v2/help_center/articles/labels?page[size]=100",
-    collectionPropertyName: "labels"
-  }
-];
-
 const CollectData = () => {
+  const [configurationString] = useStorage("ceatConfiguration");
+  const configuration = configurationString
+    ? JSON.parse(configurationString)
+    : {};
+
   useMessage<CollectDataRequest, CollectDataResponse>(
     async (request, response) => {
       const storage = new Storage({
@@ -74,14 +28,27 @@ const CollectData = () => {
       });
       await storage.set("isDataCollectionInProgress", true);
 
+      const transformationContext = await buildTransformationContext(
+        configuration
+      );
+
       const workbook = XLSX.utils.book_new();
 
-      for (const getApi of getApisToCall) {
+      for (const api of configuration.apis) {
         try {
-          const records = await callPaginatedApi(
-            getApi.url,
-            getApi.collectionPropertyName
+          let records = await callPaginatedApi(
+            api.url,
+            api.collectionPropertyName
           );
+
+          if (api.transformationExpression) {
+            const transformerInput = {
+              data: records,
+              context: transformationContext
+            };
+            const expression = jsonata(api.transformationExpression);
+            records = await expression.evaluate(transformerInput);
+          }
 
           records.forEach((record) => {
             Object.keys(record).forEach((key) => {
@@ -99,21 +66,22 @@ const CollectData = () => {
           XLSX.utils.book_append_sheet(
             workbook,
             worksheet,
-            getApi?.sheetName ?? getApi.collectionPropertyName
+            api?.sheetName ?? api.collectionPropertyName
           );
         } catch (error) {
-          console.log("📋 ~ file: collect-data.tsx:105 ~ getApi:", getApi);
+          console.log("📋 ~ file: collect-data.tsx:212 ~ api:", api);
+
           if (error instanceof ApiError) {
             console.log(
-              "📋 ~ file: collect-data.tsx:107 ~ httpResponse:",
+              "📋 ~ file: collect-data.tsx:215 ~ error.httpResponse:",
               error.httpResponse
             );
             console.log(
-              "📋 ~ file: collect-data.tsx:111 ~ httpResponse:",
+              "📋 ~ file: collect-data.tsx:219 ~ error.response:",
               error.response
             );
           } else {
-            console.log("📋 ~ file: collect-data.tsx:116 ~ error:", error);
+            console.log("📋 ~ file: collect-data.tsx:224 ~ error:", error);
           }
         }
       }
@@ -124,7 +92,7 @@ const CollectData = () => {
       try {
         XLSX.writeFile(workbook, workbookName);
       } catch (error) {
-        console.log("📋 ~ file: collect-data.tsx:127 ~ error:", error);
+        console.log("📋 ~ file: collect-data.tsx:235 ~ error:", error);
       }
 
       await storage.set("isDataCollectionInProgress", false);
@@ -177,6 +145,44 @@ async function callRateLimitedApi(url: string) {
   }
 
   return response;
+}
+
+async function buildTransformationContext(configuration) {
+  const transformationContext = {};
+
+  for (const transformationContextApi of configuration.transformationContextApis) {
+    try {
+      let transformationContextRecords = await callPaginatedApi(
+        transformationContextApi.url,
+        transformationContextApi.collectionPropertyName
+      );
+
+      transformationContext[
+        transformationContextApi?.contextPropertyName ??
+          transformationContextApi.collectionPropertyName
+      ] = transformationContextRecords;
+    } catch (error) {
+      console.log(
+        "📋 ~ buildTransformationContext ~ transformationContextApi:",
+        transformationContextApi
+      );
+
+      if (error instanceof ApiError) {
+        console.log(
+          "📋 ~ buildTransformationContext ~ error.httpResponse:",
+          error.httpResponse
+        );
+        console.log(
+          "📋 ~ buildTransformationContext ~ error.response:",
+          error.response
+        );
+      } else {
+        console.log("📋 ~ buildTransformationContext ~ error:", error);
+      }
+    }
+  }
+
+  return transformationContext;
 }
 
 export default CollectData;
